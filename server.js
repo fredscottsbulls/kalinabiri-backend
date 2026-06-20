@@ -548,7 +548,6 @@ async function ensureVerificationTable() {
     created_at TIMESTAMP DEFAULT NOW()
   )`);
 }
-ensureVerificationTable();
 
 function generateCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -1389,6 +1388,4 @@ app.post('/api/admin/db', authenticate, requireRole('admin'), async (req, res) =
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const PORT = process.env.PORT || 3000;
-initDB().then(() => {
-  server.listen(PORT, '0.0.0.0', () => console.log(`✓ Kalinabiri API running on port ${PORT}`));
-});
+server.listen(PORT, '0.0.0.0', () => console.log(`✓ Kalinabiri API running on port ${PORT}`));
