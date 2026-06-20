@@ -61,6 +61,7 @@ const initDB = async () => {
   // For SQLite, db.js handles tables internally
   if (!dbUrl || dbUrl.includes('railway.internal')) return;
   try {
+  const client = await pool.connect();
     // Migration: add missing columns to existing tables
     const migrate = async (table, col, def) => {
       try {
