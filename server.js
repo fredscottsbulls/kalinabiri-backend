@@ -17,10 +17,10 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-// Use SQLite if no DATABASE_URL or Railway is unreachable
+// Use SQLite if no DATABASE_URL; otherwise use PostgreSQL
 let pool;
 const dbUrl = process.env.DATABASE_URL;
-if (!dbUrl || dbUrl.includes('railway.internal')) {
+if (!dbUrl || dbUrl.startsWith('sqlite')) {
   const localDb = require('./db');
   pool = localDb;
 } else {
@@ -58,8 +58,8 @@ const requireRole = (...roles) => (req, res, next) =>
 
 // ── Init DB ──────────────────────────────────────────────
 const initDB = async () => {
-  // For SQLite, db.js handles tables internally
-  if (!dbUrl || dbUrl.includes('railway.internal')) return;
+  // For SQLite, db.js handles tables internally; skip PG init if not using PostgreSQL
+  if (!dbUrl || !dbUrl.startsWith('postgres')) return;
   try {
   const client = await pool.connect();
     // Migration: add missing columns to existing tables
@@ -448,8 +448,8 @@ app.post('/api/auth/register', async (req, res) => {
     const { username, email, password, role, first_name, last_name, phone, class: studentClass, stream, gender, studentNumber, subjects_taught } = req.body;
     if (!username || !email || !password || !role) return res.status(400).json({ error: 'Missing required fields' });
     const hash = bcrypt.hashSync(password, 10);
-    // Detect SQLite vs PostgreSQL
-    const isSqlite = !dbUrl || dbUrl.includes('railway.internal');
+    // Detect SQLite vs PostgreSQL (postgresql:// URL means PG, otherwise SQLite)
+    const isSqlite = !dbUrl || !dbUrl.startsWith('postgres');
     console.log('REGISTER isSqlite:', isSqlite, 'dbUrl:', dbUrl);
 
     let newUser;
@@ -528,7 +528,7 @@ const { first_name, last_name, phone, email } = req.body;
 
 // Email Verification ─────────────────────────────────────────────────────────
 async function ensureVerificationTable() {
-  if (!dbUrl || dbUrl.includes('railway.internal')) {
+  if (!dbUrl || !dbUrl.startsWith('postgres')) {
     getDb().exec(`CREATE TABLE IF NOT EXISTS email_verifications (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER UNIQUE NOT NULL,
