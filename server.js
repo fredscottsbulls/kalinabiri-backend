@@ -93,7 +93,7 @@ const initDB = async () => {
       admission_no VARCHAR(50) UNIQUE, date_of_birth DATE, nationality VARCHAR(50),
       former_school TEXT, religion VARCHAR(50), guardian_name VARCHAR(100),
       guardian_phone VARCHAR(20), guardian_relation VARCHAR(50),
-      medical_conditions TEXT, house VARCHAR(50), clubs TEXT[],
+      medical_conditions TEXT, house VARCHAR(50), clubs TEXT[]
 )`);
     // Migrations: add columns that may not exist in older deployed databases
     const studentCols = await client.query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'students'`);
