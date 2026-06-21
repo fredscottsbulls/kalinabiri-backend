@@ -60,8 +60,9 @@ const requireRole = (...roles) => (req, res, next) =>
 const initDB = async () => {
   // For SQLite, db.js handles tables internally; skip PG init if not using PostgreSQL
   if (!dbUrl || !dbUrl.startsWith('postgres')) return;
+  let client;
   try {
-  const client = await pool.connect();
+    client = await pool.connect();
     // Migration: add missing columns to existing tables
     const migrate = async (table, col, def) => {
       try {
@@ -281,7 +282,7 @@ const initDB = async () => {
 
     console.log('✓ Database schema ready');
   } finally {
-    client.release();
+    if (client) client.release();
   }
 };
 
