@@ -1388,4 +1388,7 @@ app.post('/api/admin/db', authenticate, requireRole('admin'), async (req, res) =
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => console.log(`✓ Kalinabiri API running on port ${PORT}`));
+(async () => {
+  await initDB();
+  server.listen(PORT, '0.0.0.0', () => console.log(`✓ Kalinabiri API running on port ${PORT}`));
+})();
