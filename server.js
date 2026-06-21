@@ -438,7 +438,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
     if (!passwordMatch) return res.status(401).json({ error: 'Invalid credentials' });
 
     await pool.query('UPDATE users SET last_login = NOW(), is_online = true WHERE id = $1', [user.id]);
-    const token = jwt.sign({ id: user.id, role: user.role, username: user.username }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, role: user.role, username: user.username }, process.env.JWT_SECRET || 'kalinabiri-secret-2026', { expiresIn: '7d' });
     res.json({ token, user: { id: user.id, username: user.username, email: user.email, role: user.role, first_name: user.first_name, last_name: user.last_name, phone: user.phone, class: user.class, stream: user.stream, avatar_url: user.avatar_url } });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -484,7 +484,7 @@ app.post('/api/auth/register', async (req, res) => {
         const year = new Date().getFullYear();
         const countRes = isSqlite
           ? await pool.query("SELECT COUNT(*) as c FROM students WHERE admission_no LIKE ?", ['KSS/' + year + '/%'])
-          : await pool.query("SELECT COUNT(*) FROM students WHERE admission_no LIKE $1", ['KSS/' + year + '/%']);
+          : await pool.query("SELECT COUNT(*) FROM students WHERE registration_number LIKE $1", ['KSS/' + year + '/%']);
         const count = isSqlite ? countRes[0].c : parseInt(countRes.rows[0].count);
         const seq = count + 1;
         admissionNo = 'KSS/' + year + '/' + String(seq).padStart(3, '0');
@@ -494,7 +494,7 @@ app.post('/api/auth/register', async (req, res) => {
       } else {
         await pool.query(`ALTER TABLE students ADD COLUMN IF NOT EXISTS admission_no VARCHAR(50) UNIQUE`);
         await pool.query(`ALTER TABLE students ADD COLUMN IF NOT EXISTS stream VARCHAR(20) DEFAULT 'A'`);
-        await pool.query(`INSERT INTO students (user_id, admission_no, stream) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET admission_no = EXCLUDED.admission_no, stream = EXCLUDED.stream`, [newUser.id, admissionNo, stream || 'A']);
+    await client.query(`INSERT INTO students (user_id, registration_number, stream) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET registration_number = EXCLUDED.registration_number, stream = EXCLUDED.stream`, [newUser.id, admissionNo, stream || 'A']);
       }
     }
     res.json({ message: 'Registered successfully', user: { id: newUser.id, username: newUser.username, email: newUser.email, role: newUser.role } });
